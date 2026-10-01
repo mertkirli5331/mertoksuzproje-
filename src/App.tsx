@@ -26,6 +26,9 @@ import { PomodoroTimer } from './components/PomodoroTimer';
 import { TaskModal } from './components/TaskModal';
 import { DocumentModal } from './components/DocumentModal';
 import { ProjectSettingsModal } from './components/ProjectSettingsModal';
+import { DriveLinkModal } from './components/DriveLinkModal';
+import { SyncDeviceModal } from './components/SyncDeviceModal';
+import { CheckCircle2, X } from 'lucide-react';
 
 export default function App() {
   // Primary State
@@ -43,6 +46,12 @@ export default function App() {
   // Modals
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null);
+
+  // Drive Link Modal state
+  const [isDriveModalOpen, setIsDriveModalOpen] = useState(false);
+  const [selectedWeekForDrive, setSelectedWeekForDrive] = useState<WeekPlan | null>(null);
   
   // Task Modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -58,6 +67,34 @@ export default function App() {
   useEffect(() => {
     saveProjectSettings(settings);
   }, [settings]);
+
+  // Check URL hash for cross-device sync payload (e.g. from QR code scan on phone)
+  useEffect(() => {
+    try {
+      const hash = window.location.hash;
+      if (hash.startsWith('#sync=')) {
+        const encoded = hash.replace('#sync=', '');
+        const decodedJson = decodeURIComponent(escape(atob(encoded)));
+        const parsed = JSON.parse(decodedJson);
+        if (parsed && Array.isArray(parsed.driveLinks)) {
+          setWeeks((prev) =>
+            prev.map((w) => {
+              const matched = parsed.driveLinks.find((item: any) => item.weekNumber === w.weekNumber);
+              if (matched) {
+                 return { ...w, driveUrl: matched.url, driveTitle: matched.title };
+              }
+              return w;
+            })
+          );
+          setSyncSuccessMessage(`✅ ${parsed.driveLinks.length} adet Google Drive bağlantısı bu cihaza başarıyla aktarıldı!`);
+          setTimeout(() => setSyncSuccessMessage(null), 6000);
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }
+    } catch (err) {
+      console.error('Sync hash parsing error', err);
+    }
+  }, []);
 
   useEffect(() => {
     saveWeeks(weeks);
@@ -145,6 +182,56 @@ export default function App() {
     setIsDocModalOpen(true);
   };
 
+  const handleOpenDriveModal = (week: WeekPlan) => {
+    setSelectedWeekForDrive(week);
+    setIsDriveModalOpen(true);
+  };
+
+  const handleSaveDriveLink = (weekNumber: number, driveUrl: string, driveTitle?: string) => {
+    setWeeks((prev) =>
+      prev.map((w) =>
+        w.weekNumber === weekNumber
+          ? { ...w, driveUrl, driveTitle: driveTitle || `Hafta ${weekNumber} Google Drive Klasörü` }
+          : w
+      )
+    );
+
+    // Also sync to weekly documents list so it appears in both places
+    setDocuments((prev) => {
+      const existingDoc = prev.find((d) => d.weekNumber === weekNumber && d.type.startsWith('drive'));
+      if (existingDoc) {
+        return prev.map((d) =>
+          d.id === existingDoc.id
+            ? { ...d, url: driveUrl, title: driveTitle || existingDoc.title, updatedAt: new Date().toISOString() }
+            : d
+        );
+      } else {
+        const newDoc: WeeklyDocument = {
+          id: `drive-${weekNumber}-${Date.now()}`,
+          weekNumber,
+          title: driveTitle || `Hafta ${weekNumber} Google Drive Klasörü`,
+          type: 'drive_folder',
+          url: driveUrl,
+          content: `Hafta ${weekNumber} çalışma dosyaları Google Drive bağlantısı: ${driveUrl}`,
+          updatedAt: new Date().toISOString(),
+          author: settings.ownerName || 'Mert Öksüz',
+          tags: ['Google Drive', `Hafta ${weekNumber}`],
+        };
+        return [newDoc, ...prev];
+      }
+    });
+  };
+
+  const handleRemoveDriveLink = (weekNumber: number) => {
+    setWeeks((prev) =>
+      prev.map((w) =>
+        w.weekNumber === weekNumber
+          ? { ...w, driveUrl: undefined, driveTitle: undefined }
+          : w
+      )
+    );
+  };
+
   const handleSaveDoc = (docToSave: WeeklyDocument) => {
     setDocuments((prev) => {
       const exists = prev.some((d) => d.id === docToSave.id);
@@ -216,7 +303,26 @@ export default function App() {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenTaskModal={() => handleOpenTaskModal(activeWeek)}
         onOpenTimerModal={() => setIsTimerModalOpen(true)}
+        onOpenSyncModal={() => setIsSyncModalOpen(true)}
       />
+
+      {/* Sync Notification Toast Banner */}
+      {syncSuccessMessage && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 px-4 py-3 rounded-2xl flex items-center justify-between text-xs sm:text-sm font-semibold shadow-lg">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+              <span>{syncSuccessMessage}</span>
+            </div>
+            <button
+              onClick={() => setSyncSuccessMessage(null)}
+              className="p-1 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -239,6 +345,7 @@ export default function App() {
             activeWeek={activeWeek}
             onSelectWeek={handleSelectWeek}
             onOpenTaskModal={(weekNum) => handleOpenTaskModal(weekNum)}
+            onOpenDriveModal={handleOpenDriveModal}
           />
         )}
 
@@ -325,6 +432,21 @@ export default function App() {
         weekNumber={targetDocWeek}
         onSave={handleSaveDoc}
         onDelete={handleDeleteDoc}
+      />
+
+      <DriveLinkModal
+        isOpen={isDriveModalOpen}
+        onClose={() => setIsDriveModalOpen(false)}
+        week={selectedWeekForDrive}
+        onSaveDriveLink={handleSaveDriveLink}
+        onRemoveDriveLink={handleRemoveDriveLink}
+      />
+
+      <SyncDeviceModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        weeks={weeks}
+        settings={settings}
       />
 
       <ProjectSettingsModal

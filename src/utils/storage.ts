@@ -39,7 +39,15 @@ export function savePhases(phases: Phase[]): void {
 export function getWeeks(): WeekPlan[] {
   try {
     const raw = localStorage.getItem(WEEKS_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: WeekPlan[] = JSON.parse(raw);
+      return parsed.map((w) => {
+        if (w.weekNumber <= 30) {
+          return { ...w, title: '', goal: '' };
+        }
+        return w;
+      });
+    }
   } catch (e) {
     console.error('Error loading weeks', e);
   }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   FolderGit2, Calendar, Kanban, BarChart3, Settings, 
-  Plus, Timer, Sparkles, UserCheck, Shield
+  Plus, Timer, Sparkles, UserCheck, Shield, Smartphone, QrCode
 } from 'lucide-react';
 import { ProjectSettings } from '../types/project';
 
@@ -13,6 +13,7 @@ interface NavbarProps {
   onOpenSettings: () => void;
   onOpenTaskModal: () => void;
   onOpenTimerModal: () => void;
+  onOpenSyncModal: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -23,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSettings,
   onOpenTaskModal,
   onOpenTimerModal,
+  onOpenSyncModal,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800">
@@ -106,6 +108,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action buttons */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={onOpenSyncModal}
+              title="Telefona veya Başka Cihaza Aktar (QR Kod)"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:text-white hover:bg-emerald-600/30 transition-all text-xs font-semibold cursor-pointer"
+            >
+              <Smartphone className="w-4 h-4 text-emerald-400" />
+              <span className="hidden sm:inline">Telefona Aktar</span>
+            </button>
+
             <button
               onClick={onOpenTimerModal}
               title="Çalışma Saati & Pomodoro"

@@ -123,10 +123,12 @@ export function generateInitialWeeks(startDateStr: string): WeekPlan[] {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
 
-    const desc = weekDescriptions[i - 1] || {
-      title: `Hafta ${i} Çalışmaları`,
-      goal: `Hafta ${i} için belirlenen hedeflerin gerçekleştirilmesi.`,
-    };
+    const desc = i <= 30
+      ? { title: '', goal: '', isMilestone: false, milestoneTitle: undefined }
+      : (weekDescriptions[i - 1] || {
+          title: `Hafta ${i} Çalışmaları`,
+          goal: `Hafta ${i} için belirlenen hedeflerin gerçekleştirilmesi.`,
+        });
 
     let phaseId = 'phase-1';
     if (i >= 5 && i <= 10) phaseId = 'phase-2';
@@ -146,6 +148,8 @@ export function generateInitialWeeks(startDateStr: string): WeekPlan[] {
       notes: `Hafta ${i} detaylı çalışma planı ve hedefleri Mert Öksüz tarafından takip edilmektedir.`,
       isMilestone: desc.isMilestone,
       milestoneTitle: desc.milestoneTitle,
+      driveUrl: i === 1 ? 'https://drive.google.com/drive/my-drive' : undefined,
+      driveTitle: i === 1 ? 'Hafta 1 - Google Drive Proje Klasörü' : undefined,
     });
   }
 

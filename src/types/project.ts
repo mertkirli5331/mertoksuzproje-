@@ -51,6 +51,8 @@ export interface WeekPlan {
   notes: string;
   isMilestone?: boolean;
   milestoneTitle?: string;
+  driveUrl?: string; // Direct Google Drive folder/file URL
+  driveTitle?: string; // Optional custom label for the Drive link
 }
 
 export interface ProjectSettings {
