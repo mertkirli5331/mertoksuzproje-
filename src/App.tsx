@@ -16,12 +16,18 @@ import {
   getTimeLogs, saveTimeLogs,
   exportProjectDataJSON, importProjectDataJSON, resetAllDataToDefault
 } from './utils/storage';
-import { Navbar } from './components/Navbar';
-import { LiveClock } from './components/LiveClock';
+
+import { Header } from './components/Header';
+import { MenuBar } from './components/MenuBar';
+import { LeftSidebar } from './components/LeftSidebar';
+import { RightSidebar } from './components/RightSidebar';
+import { Footer } from './components/Footer';
+
 import { TimelineView } from './components/TimelineView';
 import { WeeklyWorkspace } from './components/WeeklyWorkspace';
 import { KanbanView } from './components/KanbanView';
 import { AnalyticsView } from './components/AnalyticsView';
+
 import { PomodoroTimer } from './components/PomodoroTimer';
 import { TaskModal } from './components/TaskModal';
 import { DocumentModal } from './components/DocumentModal';
@@ -294,21 +300,27 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-500 selection:text-white">
-      {/* Top Navigation */}
-      <Navbar
-        currentView={currentView}
-        onViewChange={setCurrentView}
+      {/* 1. HEADER (BAŞLIK) Alanı - Üst bilgi bölümü */}
+      <Header
         settings={settings}
         activeWeek={activeWeek}
-        onOpenSettings={() => setIsSettingsModalOpen(true)}
+        totalWeeks={settings.totalWeeks || 38}
+      />
+
+      {/* 2. MENÜ ALANI - Yatay Gezinme Çubuğu */}
+      <MenuBar
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        activeWeek={activeWeek}
         onOpenTaskModal={() => handleOpenTaskModal(activeWeek)}
         onOpenTimerModal={() => setIsTimerModalOpen(true)}
         onOpenSyncModal={() => setIsSyncModalOpen(true)}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
 
       {/* Sync Notification Toast Banner */}
       {syncSuccessMessage && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="max-w-[1700px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4">
           <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 px-4 py-3 rounded-2xl flex items-center justify-between text-xs sm:text-sm font-semibold shadow-lg">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
@@ -324,87 +336,102 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Live Clock & Project Countdown Bar */}
-        <LiveClock
-          settings={settings}
-          weeks={weeks}
-          activeWeek={activeWeek}
-          onSelectWeek={handleSelectWeek}
-          onOpenTimerModal={() => setIsTimerModalOpen(true)}
-        />
-
-        {/* View Switch */}
-        {currentView === 'timeline' && (
-          <TimelineView
-            phases={phases}
+      {/* 3. ANA DÜZEN (3-KOLONLU HOLY GRAIL YAPISI): 
+             [SOL SIDEBAR] | [ORTA CONTENT] | [SAĞ SIDEBAR] */}
+      <div className="flex-1 max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          
+          {/* SOL SIDEBAR: 38 Hafta Listesi & Filtreler */}
+          <LeftSidebar
             weeks={weeks}
+            phases={phases}
             tasks={tasks}
-            documents={documents}
             activeWeek={activeWeek}
             onSelectWeek={handleSelectWeek}
-            onOpenTaskModal={(weekNum) => handleOpenTaskModal(weekNum)}
             onOpenDriveModal={handleOpenDriveModal}
           />
-        )}
 
-        {currentView === 'workspace' && (
-          <WeeklyWorkspace
-            activeWeek={activeWeek}
-            weeks={weeks}
-            phases={phases}
-            tasks={tasks}
-            documents={documents}
-            timeLogs={timeLogs}
-            onSelectWeek={setActiveWeek}
-            onUpdateWeekPlan={handleUpdateWeekPlan}
-            onOpenTaskModal={(wNum, task) => handleOpenTaskModal(wNum, task)}
-            onOpenDocModal={(wNum, doc) => handleOpenDocModal(wNum, doc)}
-            onToggleTaskStatus={handleToggleTaskStatus}
-            onDeleteTask={handleDeleteTask}
-            onDeleteDoc={handleDeleteDoc}
-            onOpenTimerModal={() => setIsTimerModalOpen(true)}
-            onSaveManualTimeLog={handleSaveManualTimeLog}
-          />
-        )}
+          {/* ORTA CONTENT: Sayfa İçeriğinin Yer Aldığı Ana Alan */}
+          <main className="flex-1 min-w-0 w-full space-y-6">
+            {currentView === 'timeline' && (
+              <TimelineView
+                phases={phases}
+                weeks={weeks}
+                tasks={tasks}
+                documents={documents}
+                activeWeek={activeWeek}
+                onSelectWeek={handleSelectWeek}
+                onOpenTaskModal={(weekNum) => handleOpenTaskModal(weekNum)}
+                onOpenDriveModal={handleOpenDriveModal}
+              />
+            )}
 
-        {currentView === 'kanban' && (
-          <KanbanView
-            tasks={tasks}
-            weeks={weeks}
-            activeWeek={activeWeek}
-            onOpenTaskModal={(wNum, task) => handleOpenTaskModal(wNum, task)}
-            onUpdateTaskStatus={handleUpdateTaskStatus}
-            onDeleteTask={handleDeleteTask}
-            onSelectWeek={handleSelectWeek}
-          />
-        )}
+            {currentView === 'workspace' && (
+              <WeeklyWorkspace
+                activeWeek={activeWeek}
+                weeks={weeks}
+                phases={phases}
+                tasks={tasks}
+                documents={documents}
+                timeLogs={timeLogs}
+                onSelectWeek={setActiveWeek}
+                onUpdateWeekPlan={handleUpdateWeekPlan}
+                onOpenTaskModal={(wNum, task) => handleOpenTaskModal(wNum, task)}
+                onOpenDocModal={(wNum, doc) => handleOpenDocModal(wNum, doc)}
+                onToggleTaskStatus={handleToggleTaskStatus}
+                onDeleteTask={handleDeleteTask}
+                onDeleteDoc={handleDeleteDoc}
+                onOpenTimerModal={() => setIsTimerModalOpen(true)}
+                onSaveManualTimeLog={handleSaveManualTimeLog}
+              />
+            )}
 
-        {currentView === 'analytics' && (
-          <AnalyticsView
+            {currentView === 'kanban' && (
+              <KanbanView
+                tasks={tasks}
+                weeks={weeks}
+                activeWeek={activeWeek}
+                onOpenTaskModal={(wNum, task) => handleOpenTaskModal(wNum, task)}
+                onUpdateTaskStatus={handleUpdateTaskStatus}
+                onDeleteTask={handleDeleteTask}
+                onSelectWeek={handleSelectWeek}
+              />
+            )}
+
+            {currentView === 'analytics' && (
+              <AnalyticsView
+                settings={settings}
+                phases={phases}
+                weeks={weeks}
+                tasks={tasks}
+                documents={documents}
+                timeLogs={timeLogs}
+                onSelectWeek={handleSelectWeek}
+              />
+            )}
+          </main>
+
+          {/* SAĞ SIDEBAR: Araçlar, Canlı Saat, Pomodoro & QR Telefona Aktar */}
+          <RightSidebar
             settings={settings}
-            phases={phases}
             weeks={weeks}
             tasks={tasks}
-            documents={documents}
-            timeLogs={timeLogs}
-            onSelectWeek={handleSelectWeek}
+            activeWeek={activeWeek}
+            onOpenTimerModal={() => setIsTimerModalOpen(true)}
+            onOpenSyncModal={() => setIsSyncModalOpen(true)}
           />
-        )}
-      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
-        <p>
-          <strong className="text-slate-400 font-semibold">{settings.ownerName}</strong> • 38 Haftalık Proje Planı & Zaman Yönetim Sistemi
-        </p>
-        <p className="mt-1 text-[11px] text-slate-600">
-          Google Drive Entegrasyonu & Çalışma Saati Takibi • Tüm veriler yerel olarak cihazınızda güvenle saklanır.
-        </p>
-      </footer>
+        </div>
+      </div>
 
-      {/* Modals */}
+      {/* 4. FOOTER [Alt bilgi bölümü] */}
+      <Footer
+        settings={settings}
+        onOpenSyncModal={() => setIsSyncModalOpen(true)}
+        onOpenTimerModal={() => setIsTimerModalOpen(true)}
+      />
+
+      {/* MODALS */}
       <PomodoroTimer
         isOpen={isTimerModalOpen}
         onClose={() => setIsTimerModalOpen(false)}
