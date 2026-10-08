@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Calendar, FolderGit2, Kanban, BarChart3, 
-  Smartphone, Timer, Plus, Settings, Sparkles 
+  Smartphone, Timer, Plus, Settings, Sparkles, Save, CheckCircle2 
 } from 'lucide-react';
 
 interface MenuBarProps {
@@ -12,6 +12,9 @@ interface MenuBarProps {
   onOpenTimerModal: () => void;
   onOpenSyncModal: () => void;
   onOpenSettings: () => void;
+  onSaveAll: () => void;
+  lastSavedTime: string;
+  isSaving: boolean;
 }
 
 export const MenuBar: React.FC<MenuBarProps> = ({
@@ -22,6 +25,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   onOpenTimerModal,
   onOpenSyncModal,
   onOpenSettings,
+  onSaveAll,
+  lastSavedTime,
+  isSaving,
 }) => {
   return (
     <div className="bg-slate-900 border-b border-slate-800 shadow-md sticky top-0 z-30 backdrop-blur-md bg-opacity-95">
@@ -83,6 +89,34 @@ export const MenuBar: React.FC<MenuBarProps> = ({
 
           {/* Quick Action Buttons on Right side of Menu Bar */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Prominent Save Button with Status Indicator */}
+            <button
+              onClick={onSaveAll}
+              title="Tüm eklediğiniz Google Drive linklerini ve görevleri hemen kaydeder"
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md whitespace-nowrap ${
+                isSaving
+                  ? 'bg-amber-600 text-white animate-pulse'
+                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20 active:scale-95'
+              }`}
+            >
+              {isSaving ? (
+                <>
+                  <Save className="w-4 h-4 animate-spin" />
+                  <span>Kaydediliyor...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Kaydet</span>
+                  {lastSavedTime && (
+                    <span className="hidden sm:inline font-mono text-[10px] bg-emerald-800/60 px-1.5 py-0.5 rounded text-emerald-200 ml-0.5">
+                      {lastSavedTime}
+                    </span>
+                  )}
+                </>
+              )}
+            </button>
+
             <button
               onClick={onOpenSyncModal}
               title="Telefona veya Başka Cihaza Aktar (QR Kod)"

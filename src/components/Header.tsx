@@ -6,9 +6,10 @@ interface HeaderProps {
   settings: ProjectSettings;
   activeWeek: number;
   totalWeeks: number;
+  lastSavedTime?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ settings, activeWeek, totalWeeks }) => {
+export const Header: React.FC<HeaderProps> = ({ settings, activeWeek, totalWeeks, lastSavedTime }) => {
   return (
     <header className="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950 border-b border-slate-800 text-white shadow-xl relative overflow-hidden">
       {/* Decorative ambient gradients */}
@@ -45,6 +46,16 @@ export const Header: React.FC<HeaderProps> = ({ settings, activeWeek, totalWeeks
 
           {/* Top Quick Status Badges */}
           <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center">
+            <div className="bg-slate-950/70 border border-emerald-500/30 rounded-2xl px-4 py-2 text-right">
+              <span className="text-[11px] text-emerald-400 block font-semibold flex items-center justify-end gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Kayıt Durumu
+              </span>
+              <span className="text-xs font-bold font-mono text-emerald-300">
+                {lastSavedTime ? `✓ Kaydedildi (${lastSavedTime})` : '✓ Kalıcı Kayıt Açık'}
+              </span>
+            </div>
+
             <div className="bg-slate-950/70 border border-slate-800 rounded-2xl px-4 py-2 text-right">
               <span className="text-[11px] text-slate-400 block font-medium">Aktif Hafta</span>
               <span className="text-sm font-bold font-mono text-emerald-400">

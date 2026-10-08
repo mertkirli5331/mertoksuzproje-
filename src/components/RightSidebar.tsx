@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Clock, Calendar, Timer, Play, Pause, RotateCcw, 
   Smartphone, QrCode, Copy, Check, ExternalLink, 
-  Folder, Shield, Flame, TrendingUp 
+  Folder, Shield, Flame, TrendingUp, Save, Download, CheckCircle2 
 } from 'lucide-react';
 import { ProjectSettings, WeekPlan, Task } from '../types/project';
 
@@ -13,6 +13,10 @@ interface RightSidebarProps {
   activeWeek: number;
   onOpenTimerModal: () => void;
   onOpenSyncModal: () => void;
+  onSaveAll: () => void;
+  onExportJSON: () => void;
+  lastSavedTime: string;
+  isSaving: boolean;
 }
 
 export const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -22,6 +26,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   activeWeek,
   onOpenTimerModal,
   onOpenSyncModal,
+  onSaveAll,
+  onExportJSON,
+  lastSavedTime,
+  isSaving,
 }) => {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [copied, setCopied] = useState(false);
@@ -115,6 +123,57 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             {remainingDays} Gün (38 Hafta)
           </span>
         </div>
+      </div>
+
+      {/* 2. KAYDET & YEDEKLE KARTI (Verilerin Gitmesini Önleyen Alan) */}
+      <div className="bg-slate-900/90 border border-emerald-500/30 rounded-3xl p-5 shadow-xl space-y-3 bg-gradient-to-b from-slate-900 to-emerald-950/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Save className="w-4 h-4 text-emerald-400" />
+            <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">
+              Projeyi Kaydet
+            </h3>
+          </div>
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+            <CheckCircle2 className="w-3 h-3" />
+            Kalıcı Bellek
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-300 leading-relaxed">
+          Eklediğiniz tüm <strong>Google Drive bağlantıları</strong>, görevler ve haftalık veriler tarayıcınıza anında kaydedilir.
+        </p>
+
+        <button
+          onClick={onSaveAll}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/25 transition-all cursor-pointer active:scale-95"
+        >
+          {isSaving ? (
+            <>
+              <Save className="w-4 h-4 animate-spin" />
+              <span>Kaydediliyor...</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              <span>Değişiklikleri Şimdi Kaydet</span>
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={onExportJSON}
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold text-xs transition-colors border border-slate-700/80 cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5 text-blue-400" />
+          <span>Yedek Dosyası İndir (.json)</span>
+        </button>
+
+        {lastSavedTime && (
+          <div className="text-[11px] text-center text-slate-400 pt-1 font-mono">
+            Son Kayıt: <strong className="text-emerald-400">{lastSavedTime}</strong>
+          </div>
+        )}
       </div>
 
       {/* 2. Çalışma Saati & Pomodoro Hızlı Başlatıcı */}

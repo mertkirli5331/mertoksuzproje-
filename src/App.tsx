@@ -58,6 +58,45 @@ export default function App() {
   // Drive Link Modal state
   const [isDriveModalOpen, setIsDriveModalOpen] = useState(false);
   const [selectedWeekForDrive, setSelectedWeekForDrive] = useState<WeekPlan | null>(null);
+
+  // Persistence & Save State
+  const [lastSavedTime, setLastSavedTime] = useState<string>(() => {
+    return new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveAll = () => {
+    setIsSaving(true);
+    try {
+      saveProjectSettings(settings);
+      saveWeeks(weeks);
+      saveTasks(tasks);
+      saveDocuments(documents);
+      saveTimeLogs(timeLogs);
+
+      const timeNow = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastSavedTime(timeNow);
+      setSyncSuccessMessage('✓ Tüm Google Drive bağlantıları, haftalar ve görevleriniz başarıyla kaydedildi! Sayfayı yenileseniz veya kapatsanız da bilgileriniz korunur.');
+      setTimeout(() => setSyncSuccessMessage(null), 5000);
+    } catch (err) {
+      console.error('Save error', err);
+    } finally {
+      setTimeout(() => setIsSaving(false), 350);
+    }
+  };
+
+  // Auto-save on page exit
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveProjectSettings(settings);
+      saveWeeks(weeks);
+      saveTasks(tasks);
+      saveDocuments(documents);
+      saveTimeLogs(timeLogs);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [settings, weeks, tasks, documents, timeLogs]);
   
   // Task Modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -144,10 +183,16 @@ export default function App() {
       }
       return [taskToSave, ...prev];
     });
+    const timeNow = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    setLastSavedTime(timeNow);
+    setSyncSuccessMessage('✓ Görev başarıyla kaydedildi!');
+    setTimeout(() => setSyncSuccessMessage(null), 3000);
   };
 
   const handleDeleteTask = (taskId: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    const timeNow = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    setLastSavedTime(timeNow);
   };
 
   const handleToggleTaskStatus = (taskId: string) => {
@@ -226,6 +271,11 @@ export default function App() {
         return [newDoc, ...prev];
       }
     });
+
+    const timeNow = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    setLastSavedTime(timeNow);
+    setSyncSuccessMessage(`✓ Hafta ${weekNumber} için Google Drive bağlantısı kaydedildi! Tarayıcı belleğinizde saklanmaktadır.`);
+    setTimeout(() => setSyncSuccessMessage(null), 4000);
   };
 
   const handleRemoveDriveLink = (weekNumber: number) => {
@@ -236,6 +286,10 @@ export default function App() {
           : w
       )
     );
+    const timeNow = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    setLastSavedTime(timeNow);
+    setSyncSuccessMessage(`✓ Hafta ${weekNumber} için Drive bağlantısı kaldırıldı ve kaydedildi.`);
+    setTimeout(() => setSyncSuccessMessage(null), 3000);
   };
 
   const handleSaveDoc = (docToSave: WeeklyDocument) => {
@@ -305,6 +359,7 @@ export default function App() {
         settings={settings}
         activeWeek={activeWeek}
         totalWeeks={settings.totalWeeks || 38}
+        lastSavedTime={lastSavedTime}
       />
 
       {/* 2. MENÜ ALANI - Yatay Gezinme Çubuğu */}
@@ -316,6 +371,9 @@ export default function App() {
         onOpenTimerModal={() => setIsTimerModalOpen(true)}
         onOpenSyncModal={() => setIsSyncModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onSaveAll={handleSaveAll}
+        lastSavedTime={lastSavedTime}
+        isSaving={isSaving}
       />
 
       {/* Sync Notification Toast Banner */}
@@ -419,6 +477,10 @@ export default function App() {
             activeWeek={activeWeek}
             onOpenTimerModal={() => setIsTimerModalOpen(true)}
             onOpenSyncModal={() => setIsSyncModalOpen(true)}
+            onSaveAll={handleSaveAll}
+            onExportJSON={handleExportJSON}
+            lastSavedTime={lastSavedTime}
+            isSaving={isSaving}
           />
 
         </div>
